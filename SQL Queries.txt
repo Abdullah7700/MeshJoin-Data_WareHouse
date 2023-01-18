@@ -1,0 +1,69 @@
+1) SELECT store.STORE_ID ,store.STORE_NAME, fact.totsale AS TOTAL_SALES, trandate.MONTHS, trandate.YEARS
+FROM store, fact, trandate
+WHERE store.STORE_ID = fact.store
+AND fact.date_id = trandate.TIME_ID
+AND trandate.MONTHS = 9
+AND trandate.YEARS = 2017
+GROUP BY STORE_NAME 
+ORDER BY fact.totsale DESC LIMIT 3
+
+2) select s.SUPPLIER_NAME, SUM(f.totsale) as Total_sale
+from supplier s, fact f, trandate d
+where d.DAYS = 6 OR d.DAYS = 7 
+and f.supp = s.SUPPLIER_ID
+group by SUPPLIER_ID
+order by Total_sale DESC limit 10
+
+3) select product.PRODUCT_ID, product.PRODUCT_NAME, supplier.SUPPLIER_ID,supplier.SUPPLIER_NAME, trandate.QUARTERS as Quarterly, trandate.MONTHS as Monthly, sum(fact.totsale) as Total_sale
+from fact, product, supplier, trandate
+where product.PRODUCT_ID = fact.prod and supplier.SUPPLIER_ID = fact.supp and fact.date_id = trandate.TIME_ID
+group by PRODUCT_ID, SUPPLIER_ID, Monthly, Quarterly 
+order by PRODUCT_ID
+
+4) SELECT store.STORE_ID, store.STORE_NAME, product.PRODUCT_ID, product.PRODUCT_NAME, SUM(fact.totsale) as Total_sale
+FROM product, store, fact
+WHERE fact.prod = product.PRODUCT_ID
+AND fact.store = store.STORE_ID
+GROUP BY store.STORE_ID, product.PRODUCT_ID
+ORDER BY store.STORE_ID, product.PRODUCT_ID
+
+5) select fact.store , 
+ sum(case WHEN QUARTERS = 1 then totsale else 0 end) AS Quarter1, 
+ sum(case WHEN Quarters = 2 then totsale else 0 end) AS Quarter2, 
+ sum(case WHEN Quarters = 3 then totsale else 0 end) AS Quarter3,
+ sum(case WHEN Quarters = 4 then totsale else 0 end) AS Quarter4
+FROM fact natural join trandate group by store
+
+6) SELECT product.PRODUCT_NAME, SUM(fact.totsale)
+FROM fact, trandate, product
+WHERE fact.date_id = trandate.TIME_ID
+AND product.PRODUCT_ID = fact.prod
+AND trandate.DAYS = 6 OR trandate.DAYS=7 OR trandate.DAYS=13 
+GROUP BY product.PRODUCT_ID
+ORDER BY sum(fact.totsale) DESC LIMIT 5
+
+7) SELECT s.STORE_NAME, ss.SUPPLIER_NAME, p.PRODUCT_NAME, sum(f.totsale)
+FROM fact f, store s, supplier ss, product p
+WHERE f.supp = ss.SUPPLIER_ID
+AND f.store = s.STORE_ID
+AND f.prod = p.PRODUCT_ID
+GROUP BY store, supp, prod WITH ROLLUP;
+
+8) SELECT fact.prod, 
+ sum(case WHEN months >= 6 then totsale else 0 end) AS First_Half, 
+ sum(case WHEN months < 6 then totsale else 0 end) AS Second_Half, 
+ sum(case WHEN months  <=12 then totsale else 0 end) AS Total_Yearly
+FROM fact natural join trandate group by prod
+
+9) SELECT product.PRODUCT_ID, product.PRODUCT_NAME, fact.price
+FROM fact, product
+WHERE fact.prod = product.PRODUCT_ID
+AND product_name = "Tomatoes"
+GROUP BY product.PRODUCT_ID
+
+10) CREATE VIEW MATERIALIZED_VIEW AS 
+SELECT store.STORE_ID, product.PRODUCT_ID, sum(fact.totsale)
+FROM fact, store, product
+WHERE fact.store = store.STORE_ID
+AND fact.prod = product.PRODUCT_ID
+GROUP BY store.STORE_ID, product.PRODUCT_ID
